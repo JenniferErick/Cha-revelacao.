@@ -33,7 +33,7 @@
     form {
       margin-top: 30px;
     }
-    input, button {
+    input, button, textarea {
       padding: 10px;
       margin: 5px;
       font-size: 1em;
@@ -52,17 +52,15 @@
       margin-top: 40px;
       font-size: 0.9em;
       color: #555;
+
+    #lista-convidados {
+      list-style-type: none;
+      padding: 0;
+      margin-top: 20px;
     }
-    .balloon {
-      position: absolute;
-      bottom: -100px;
-      width: 40px;
-      animation: float 10s infinite ease-in;
-    }
-    @keyframes float {
-      0% { bottom: -100px; left: 10%; opacity: 0; }
-      50% { opacity: 1; }
-      100% { bottom: 100%; left: 80%; opacity: 0; }
+    #lista-convidados li {
+      margin: 5px 0;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -74,23 +72,25 @@
     <p><strong>Jennifer Johanson & Erick Sander</strong> convidam você para o nosso Chá Revelação + Chá de Fralda!</p>
     <p>Estamos preparando o ninho do nosso bebê, <strong>Pietro ou Zoe</strong>, com muito amor e carinho. Contamos com seu carinho e sua presença!</p>
     <p><strong>Data:</strong> 01/05/2025</p>
-    <p><strong>Horário:</strong> 13h30</p>
+    <p><strong>Horário:</strong> 15h</p>
     <p><strong>Local:</strong> Rua Ina Maria Pinto, 1016 – Bairro Morada Nova</p>
 
     <div class="countdown" id="countdown"></div>
 
     <form>
-<p><strong>Confirme sua presença</strong>:</p>
-<label for="nome">Nome completo:</label><br>
-<input id="nome" type="text" placeholder="Seu nome completo" required><br>
-<label for="observacao">Observações:</label><br>
-<textarea id="observacao" placeholder="Deixe aqui alguma observação (opcional)" rows="4" cols="40"></textarea><br>
-<button type="submit">Confirmar presença</button>
-</form>
+      <p><strong>Confirme sua presença</strong>:</p>
+      <label for="nome">Nome completo:</label><br>
+      <input id="nome" type="text" placeholder="Seu nome completo" required><br>
+      <label for="observacao">Observações:</label><br>
+      <textarea id="observacao" placeholder="Deixe aqui alguma observação (opcional)" rows="4" cols="40"></textarea><br>
+      <button type="submit">Confirmar presença</button>
+    </form>
 
-    <audio controls autoplay loop style="margin-top: 30px;">
+    <h3>Lista de Convidados Confirmados:</h3>
+    <ul id="lista-convidados"></ul>
+
+    <audio autoplay loop style="display: none;">
       <source src="https://www.example.com/audio/pra-voce-guardei-o-amor.mp3" type="audio/mpeg">
-      Seu navegador não suporta áudio incorporado.
     </audio>
   </main>
 
@@ -98,13 +98,9 @@
     <p>Com carinho, Jennifer & Erick</p>
   </footer>
 
-  <img src="https://cdn-icons-png.flaticon.com/512/3468/3468835.png" class="balloon" style="left:10%; animation-delay: 0s;">
-  <img src="https://cdn-icons-png.flaticon.com/512/3468/3468852.png" class="balloon" style="left:40%; animation-delay: 3s;">
-  <img src="https://cdn-icons-png.flaticon.com/512/3468/3468854.png" class="balloon" style="left:70%; animation-delay: 5s;">
-
   <script>
     const countdownElement = document.getElementById('countdown');
-    const eventDate = new Date("2025-05-01T13:30:00").getTime();
+    const eventDate = new Date("2025-05-01T15:00:00").getTime();
 
     const countdown = setInterval(function() {
       const now = new Date().getTime();
@@ -121,6 +117,42 @@
         countdownElement.innerHTML = "O grande dia chegou!";
       }
     }, 1000);
+
+    function atualizarListaConvidados() {
+      const lista = document.getElementById('lista-convidados');
+      lista.innerHTML = '';
+
+      const convidados = JSON.parse(localStorage.getItem('convidados')) || [];
+
+      convidados.forEach(({ nome, observacao }) => {
+        const item = document.createElement('li');
+        item.textContent = observacao ? `${nome} — "${observacao}"` : nome;
+        lista.appendChild(item);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', atualizarListaConvidados);
+
+    document.querySelector('form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const nomeInput = document.getElementById('nome');
+      const observacaoInput = document.getElementById('observacao');
+
+      const nome = nomeInput.value.trim();
+      const observacao = observacaoInput.value.trim();
+
+      if (nome) {
+        const convidados = JSON.parse(localStorage.getItem('convidados')) || [];
+        convidados.push({ nome, observacao });
+        localStorage.setItem('convidados', JSON.stringify(convidados));
+
+        atualizarListaConvidados();
+
+        nomeInput.value = '';
+        observacaoInput.value = '';
+      }
+    });
   </script>
 </body>
 </html>
