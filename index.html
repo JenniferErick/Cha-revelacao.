@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -77,7 +77,7 @@
 
     <div class="countdown" id="countdown"></div>
 
-    <form>
+    <form id="formulario">
       <p><strong>Confirme sua presença</strong>:</p>
       <label for="nome">Nome completo:</label><br>
       <input id="nome" type="text" placeholder="Seu nome completo" required><br>
@@ -102,7 +102,7 @@
     const countdownElement = document.getElementById('countdown');
     const eventDate = new Date("2025-05-01T15:00:00").getTime();
 
-    const countdown = setInterval(function() {
+    const countdown = setInterval(function () {
       const now = new Date().getTime();
       const distance = eventDate - now;
 
@@ -118,41 +118,47 @@
       }
     }, 1000);
 
-    function atualizarListaConvidados() {
-      const lista = document.getElementById('lista-convidados');
-      lista.innerHTML = '';
+    // Enviar dados para o Google Sheets
+    document.getElementById('formulario').addEventListener('submit', function (e) {
+      e.preventDefault();
 
-      const convidados = JSON.parse(localStorage.getItem('convidados')) || [];
+      const nome = document.getElementById('nome').value.trim();
+      const observacao = document.getElementById('observacao').value.trim();
 
-      convidados.forEach(({ nome, observacao }) => {
-        const item = document.createElement('li');
-        item.textContent = observacao ? `${nome} — "${observacao}"` : nome;
-        lista.appendChild(item);
+      if (!nome) return;
+
+      fetch('https://sheetdb.io/api/v1/l61d3sis5db1q', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ data: { nome, observacao } })
+      }).then(response => {
+        document.getElementById('nome').value = '';
+        document.getElementById('observacao').value = '';
+        carregarConvidados();
       });
+    });
+
+    // Buscar convidados do Google Sheets
+    function carregarConvidados() {
+      fetch('https://sheetdb.io/api/v1/l61d3sis5db1q')
+        .then(response => response.json())
+        .then(data => {
+          const lista = document.getElementById('lista-convidados');
+          lista.innerHTML = '';
+
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item.observacao
+              ? `${item.nome} — "${item.observacao}"`
+              : item.nome;
+            lista.appendChild(li);
+          });
+        });
     }
 
-    document.addEventListener('DOMContentLoaded', atualizarListaConvidados);
-
-    document.querySelector('form').addEventListener('submit', function(event) {
-      event.preventDefault();
-
-      const nomeInput = document.getElementById('nome');
-      const observacaoInput = document.getElementById('observacao');
-
-      const nome = nomeInput.value.trim();
-      const observacao = observacaoInput.value.trim();
-
-      if (nome) {
-        const convidados = JSON.parse(localStorage.getItem('convidados')) || [];
-        convidados.push({ nome, observacao });
-        localStorage.setItem('convidados', JSON.stringify(convidados));
-
-        atualizarListaConvidados();
-
-        nomeInput.value = '';
-        observacaoInput.value = '';
-      }
-    });
+    document.addEventListener('DOMContentLoaded', carregarConvidados);
   </script>
 </body>
 </html>
